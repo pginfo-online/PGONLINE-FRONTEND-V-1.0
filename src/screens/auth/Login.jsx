@@ -74,16 +74,6 @@ export default function Login() {
         </div>
 
         {/* Demo credentials hint */}
-        <div style={{
-          background: '#ede9fe', borderRadius: 10, padding: '0.75rem 1rem',
-          marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
-        }}>
-          <Shield size={16} color="#7c3aed" style={{ flexShrink: 0, marginTop: 2 }} />
-          <div style={{ fontSize: '0.75rem', color: '#5b21b6', lineHeight: 1.5 }}>
-            <strong>Admin:</strong> admin@pginfo.online / Admin@123<br />
-            <strong>Owner:</strong> owner1@pginfo.online / Owner@123
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
