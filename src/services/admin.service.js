@@ -1,4 +1,5 @@
 import api from './api';
+import { parsePaginatedResponse } from '../utils/apiHelpers';
 
 export const adminService = {
   // PG management
@@ -35,6 +36,25 @@ export const adminService = {
   getAnalytics: async () => {
     const res = await api.get('/admin/analytics');
     return res.data.data;
+  },
+
+  // PG Update Requests
+  getAllUpdateRequests: async (params) => {
+    const res = await api.get('/admin/pg-updates', { params });
+    const { items, pagination } = parsePaginatedResponse(res, 'requests');
+    return { requests: items, pagination };
+  },
+  approveUpdateRequest: async (id) => {
+    const res = await api.put(`/admin/pg-updates/${id}/approve`);
+    return res.data.data.request;
+  },
+  rejectUpdateRequest: async (id, comment) => {
+    const res = await api.put(`/admin/pg-updates/${id}/reject`, { comment });
+    return res.data.data.request;
+  },
+  requestCorrection: async (id, comment) => {
+    const res = await api.put(`/admin/pg-updates/${id}/correction`, { comment });
+    return res.data.data.request;
   },
 };
 

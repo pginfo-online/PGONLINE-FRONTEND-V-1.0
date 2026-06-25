@@ -1,7 +1,7 @@
 import axios from 'axios';
 import useAuthStore from '../store/authStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://pgonline-backend-v-1-0.vercel.app/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE,

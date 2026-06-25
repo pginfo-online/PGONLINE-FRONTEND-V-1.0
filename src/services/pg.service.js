@@ -36,6 +36,11 @@ export const pgService = {
     const res = await api.delete(`/upload/image/${pgId}`, { data: { publicId } });
     return res.data.data;
   },
+  getMyUpdateRequests: async () => {
+    const res = await api.get('/pg/my/update-requests');
+    return res.data.data.requests;
+  },
+  cancelUpdateRequest: async (id) => api.delete(`/pg/my/update-requests/${id}`),
 };
 
 export default pgService;

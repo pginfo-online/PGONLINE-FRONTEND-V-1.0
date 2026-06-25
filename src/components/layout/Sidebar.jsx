@@ -9,6 +9,8 @@ import useAuthStore from '../../store/authStore';
 const adminNavItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'PG Approvals', to: '/admin/approvals', icon: CheckCircle },
+  { label: 'PG Updates', to: '/admin/pg-updates', icon: ShieldCheck },
+  { label: 'Meetup Management', to: '/admin/meetups', icon: Calendar },
   { label: 'User Management', to: '/admin/users', icon: Users },
   { label: 'Analytics', to: '/admin/analytics', icon: BarChart3 },
 ];
@@ -17,6 +19,7 @@ const ownerNavItems = [
   { label: 'Dashboard', to: '/owner/dashboard', icon: Home },
   { label: 'My Listings', to: '/owner/listings', icon: Building2 },
   { label: 'Add PG', to: '/owner/listings/add', icon: ListPlus },
+  { label: 'Meetups', to: '/owner/meetups', icon: Users },
   { label: 'Leads', to: '/owner/leads', icon: MessageSquare },
   { label: 'Visits', to: '/owner/visits', icon: Calendar },
 ];

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Building2, Users, CheckCircle, Clock, XCircle, TrendingUp } from 'lucide-react';
+import { BarChart3, Building2, Users, CheckCircle, Clock, XCircle, TrendingUp, Calendar, RefreshCw } from 'lucide-react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import adminService from '../../services/admin.service';
+import meetupService from '../../services/meetup.service';
+import toast from 'react-hot-toast';
 
 const StatCard = ({ icon: Icon, label, value, sub, color }) => (
   <div className="stat-card">
@@ -18,11 +20,22 @@ const StatCard = ({ icon: Icon, label, value, sub, color }) => (
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
+  const [pendingUpdates, setPendingUpdates] = useState(0);
+  const [meetupsCount, setMeetupsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    adminService.getAnalytics()
-      .then(setAnalytics)
+    Promise.all([
+      adminService.getAnalytics(),
+      adminService.getAllUpdateRequests({ status: 'pending', limit: 1 }),
+      meetupService.adminGetAll({ status: 'pending_approval', limit: 1 }),
+    ])
+      .then(([analyticsData, updatesData, meetupsData]) => {
+        setAnalytics(analyticsData);
+        setPendingUpdates(updatesData.pagination?.total ?? updatesData.requests?.length ?? 0);
+        setMeetupsCount(meetupsData.pagination?.total ?? meetupsData.meetups?.length ?? 0);
+      })
+      .catch((err) => toast.error('Failed to load dashboard: ' + err.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -30,8 +43,10 @@ export default function AdminDashboard() {
     { icon: Building2, label: 'Total Listings', value: analytics.pgs.total, sub: `${analytics.pgs.approved} approved`, color: '#4f46e5' },
     { icon: CheckCircle, label: 'Verified PGs', value: analytics.pgs.verified, sub: `${analytics.pgs.pending} pending`, color: '#10b981' },
     { icon: Clock, label: 'Pending Approval', value: analytics.pgs.pending, sub: 'Needs action', color: '#f59e0b' },
+    { icon: RefreshCw, label: 'Pending Updates', value: pendingUpdates, sub: 'PG edit requests', color: '#d97706' },
+    { icon: Calendar, label: 'Pending Meetups', value: meetupsCount, sub: 'Awaiting approval', color: '#8b5cf6' },
     { icon: Users, label: 'Total Users', value: analytics.users.total, sub: `${analytics.users.tenants} tenants, ${analytics.users.owners} owners`, color: '#3b82f6' },
-    { icon: TrendingUp, label: 'Total Inquiries', value: analytics.activity.leads, sub: 'From tenants', color: '#8b5cf6' },
+    { icon: TrendingUp, label: 'Total Inquiries', value: analytics.activity.leads, sub: 'From tenants', color: '#059669' },
     { icon: BarChart3, label: 'Visit Requests', value: analytics.activity.visits, sub: 'All time', color: '#ec4899' },
   ] : [];
 
@@ -39,7 +54,7 @@ export default function AdminDashboard() {
     <PageWrapper title="Admin Dashboard" subtitle="Platform overview and analytics">
       {loading ? (
         <div className="grid-3" style={{ marginBottom: '2rem' }}>
-          {[...Array(6)].map((_, i) => (
+          {[...Array(8)].map((_, i) => (
             <div key={i} className="stat-card">
               <div className="skeleton" style={{ width: 48, height: 48, borderRadius: 12 }} />
               <div style={{ flex: 1 }}>
@@ -54,6 +69,7 @@ export default function AdminDashboard() {
           {stats.map((s) => <StatCard key={s.label} {...s} />)}
         </div>
       )}
+
 
       {/* City Stats */}
       {analytics?.cityStats && (

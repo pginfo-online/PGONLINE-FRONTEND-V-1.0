@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle } from 'lucide-react';
+import { Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle, Clock } from 'lucide-react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import ImageUploader from '../../components/shared/ImageUploader';
 import pgService from '../../services/pg.service';
@@ -42,51 +42,69 @@ export default function EditPG() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [pendingRequest, setPendingRequest] = useState(null);
+
+  const handleCancelRequest = async () => {
+    if (!pendingRequest) return;
+    if (!confirm('Are you sure you want to cancel this pending update request?')) return;
+    try {
+      await pgService.cancelUpdateRequest(pendingRequest._id);
+      toast.success('Update request cancelled!');
+      loadData();
+    } catch (err) {
+      toast.error('Failed to cancel request: ' + err.message);
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [pg, requests] = await Promise.all([
+        pgService.getById(id),
+        pgService.getMyUpdateRequests(),
+      ]);
+
+      const pending = requests.find(
+        (r) => r.pg?._id === id && ['pending', 'correction_required'].includes(r.status)
+      );
+      setPendingRequest(pending || null);
+
+      setForm({
+        name: pg.name || '',
+        description: pg.description || '',
+        city: pg.city || 'Pune',
+        area: pg.area || '',
+        address: pg.address || '',
+        mapsLink: pg.mapsLink || '',
+        food: pg.food || 'none',
+        foodIncluded: pg.foodIncluded ?? false,
+        ac: pg.ac ?? false,
+        gender: pg.gender || 'any',
+        contactPhone: pg.contactPhone || '',
+        contactWhatsapp: pg.contactWhatsapp || '',
+        isAvailable: pg.isAvailable ?? true,
+        availableRooms: pg.availableRooms ?? 0,
+        facilities: pg.facilities || [],
+        rent: {
+          single: pg.rent?.single !== undefined ? String(pg.rent.single) : '',
+          double: pg.rent?.double !== undefined ? String(pg.rent.double) : '',
+          triple: pg.rent?.triple !== undefined ? String(pg.rent.triple) : '',
+        },
+        photos: pg.photos || [],
+      });
+    } catch (err) {
+      toast.error('Failed to load PG details: ' + err.message);
+      navigate('/owner/listings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
-    let active = true;
-    const fetchPGDetails = async () => {
-      try {
-        const pg = await pgService.getById(id);
-        if (active) {
-          setForm({
-            name: pg.name || '',
-            description: pg.description || '',
-            city: pg.city || 'Pune',
-            area: pg.area || '',
-            address: pg.address || '',
-            mapsLink: pg.mapsLink || '',
-            food: pg.food || 'none',
-            foodIncluded: pg.foodIncluded ?? false,
-            ac: pg.ac ?? false,
-            gender: pg.gender || 'any',
-            contactPhone: pg.contactPhone || '',
-            contactWhatsapp: pg.contactWhatsapp || '',
-            isAvailable: pg.isAvailable ?? true,
-            availableRooms: pg.availableRooms ?? 0,
-            facilities: pg.facilities || [],
-            rent: {
-              single: pg.rent?.single !== undefined ? String(pg.rent.single) : '',
-              double: pg.rent?.double !== undefined ? String(pg.rent.double) : '',
-              triple: pg.rent?.triple !== undefined ? String(pg.rent.triple) : '',
-            },
-            photos: pg.photos || [],
-          });
-          setLoading(false);
-        }
-      } catch (err) {
-        if (active) {
-          toast.error('Failed to load PG details: ' + err.message);
-          navigate('/owner/listings');
-        }
-      }
-    };
-
-    fetchPGDetails();
-    return () => {
-      active = false;
-    };
+    loadData();
   }, [id, navigate]);
+
 
   const update = (key, val) => setForm((p) => ({ ...p, [key]: val }));
   const updateRent = (key, val) => setForm((p) => ({ ...p, rent: { ...p.rent, [key]: val } }));
@@ -159,7 +177,7 @@ export default function EditPG() {
       };
 
       await pgService.update(id, data);
-      toast.success('PG details updated successfully!');
+      toast.success('Changes submitted for approval! Your listing will go live once an admin reviews it.');
       navigate('/owner/listings');
     } catch (err) {
       toast.error(err.message || 'Failed to update PG details');
@@ -199,6 +217,62 @@ export default function EditPG() {
   return (
     <PageWrapper title={`Edit: ${form.name}`} subtitle="Update details and photos of your PG" action={backAction}>
       <form onSubmit={handleSubmit}>
+        
+        {pendingRequest && (
+          <div style={{
+            background: '#fffbeb',
+            border: '1px solid #fef3c7',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.25rem' }}>⏳</span>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>
+                  You have a pending update request for this listing.
+                </span>
+              </div>
+              <span className={`badge badge-${pendingRequest.status}`} style={{ margin: 0 }}>
+                {pendingRequest.status.replace('_', ' ')}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.875rem', color: '#b45309' }}>
+              Submitted on {new Date(pendingRequest.submittedAt).toLocaleString()}
+            </div>
+            {pendingRequest.adminComment && (
+              <div style={{
+                background: '#fff',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                borderLeft: '4px solid #f59e0b',
+                marginTop: '4px',
+                fontSize: '0.875rem',
+                color: '#374151'
+              }}>
+                <strong>Admin Comment:</strong> {pendingRequest.adminComment}
+              </div>
+            )}
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={handleCancelRequest}
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: '8px',
+                background: '#fef2f2',
+                color: '#dc2626',
+                border: '1px solid #fca5a5'
+              }}
+            >
+              Cancel Update Request
+            </button>
+          </div>
+        )}
+
         
         {/* Basic Info */}
         <div className="card" style={{ marginBottom: '1.5rem' }}>
@@ -430,8 +504,9 @@ export default function EditPG() {
             Cancel
           </Button>
           <Button type="submit" variant="primary" size="lg" loading={saving}>
-            <Save size={18} /> Save Changes
+            <Clock size={18} /> Submit for Approval
           </Button>
+
         </div>
         
       </form>

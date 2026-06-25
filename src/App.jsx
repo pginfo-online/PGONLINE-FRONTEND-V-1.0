@@ -19,6 +19,13 @@ import EditPG from './screens/owner/EditPG';
 import Leads from './screens/owner/Leads';
 import Visits from './screens/owner/Visits';
 
+// New features
+import PGUpdateRequests from './screens/admin/PGUpdateRequests';
+import MeetupManagement from './screens/admin/MeetupManagement';
+import Meetups from './screens/owner/Meetups';
+import CreateEditMeetup from './screens/owner/CreateEditMeetup';
+
+
 function PrivateRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -52,8 +59,11 @@ export default function App() {
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<PrivateRoute allowedRoles={['admin']}><AdminDashboard /></PrivateRoute>} />
         <Route path="/admin/approvals" element={<PrivateRoute allowedRoles={['admin']}><PGApprovals /></PrivateRoute>} />
+        <Route path="/admin/pg-updates" element={<PrivateRoute allowedRoles={['admin']}><PGUpdateRequests /></PrivateRoute>} />
+        <Route path="/admin/meetups" element={<PrivateRoute allowedRoles={['admin']}><MeetupManagement /></PrivateRoute>} />
         <Route path="/admin/users" element={<PrivateRoute allowedRoles={['admin']}><UserManagement /></PrivateRoute>} />
         <Route path="/admin/analytics" element={<PrivateRoute allowedRoles={['admin']}><Analytics /></PrivateRoute>} />
+
 
         {/* Owner Routes */}
         <Route path="/owner/dashboard" element={<PrivateRoute allowedRoles={['owner']}><OwnerDashboard /></PrivateRoute>} />
@@ -62,6 +72,10 @@ export default function App() {
         <Route path="/owner/listings/:id/edit" element={<PrivateRoute allowedRoles={['owner']}><EditPG /></PrivateRoute>} />
         <Route path="/owner/leads" element={<PrivateRoute allowedRoles={['owner']}><Leads /></PrivateRoute>} />
         <Route path="/owner/visits" element={<PrivateRoute allowedRoles={['owner']}><Visits /></PrivateRoute>} />
+        <Route path="/owner/meetups" element={<PrivateRoute allowedRoles={['owner']}><Meetups /></PrivateRoute>} />
+        <Route path="/owner/meetups/create" element={<PrivateRoute allowedRoles={['owner']}><CreateEditMeetup /></PrivateRoute>} />
+        <Route path="/owner/meetups/:id/edit" element={<PrivateRoute allowedRoles={['owner']}><CreateEditMeetup /></PrivateRoute>} />
+
 
         {/* Default */}
         <Route path="/" element={<Navigate to="/login" replace />} />
