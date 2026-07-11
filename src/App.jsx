@@ -25,12 +25,26 @@ import MeetupManagement from './screens/admin/MeetupManagement';
 import Meetups from './screens/owner/Meetups';
 import CreateEditMeetup from './screens/owner/CreateEditMeetup';
 
+// Public Landing Screens
+import LandingPage from './screens/landing/LandingPage';
+import Careers from './screens/landing/Careers';
+import Resources from './screens/landing/Resources';
+import HelpCenter from './screens/landing/HelpCenter';
+import Terms from './screens/landing/Terms';
+import Privacy from './screens/landing/Privacy';
+import FeaturesPage from './screens/landing/FeaturesPage';
+import AboutPage from './screens/landing/AboutPage';
+import ServicesPage from './screens/landing/ServicesPage';
+import WhyChooseUsPage from './screens/landing/WhyChooseUsPage';
+import ConnectPage from './screens/landing/ConnectPage';
+import ContactPage from './screens/landing/ContactPage';
+
 
 function PrivateRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuthStore();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
   return children;
 }
@@ -77,9 +91,22 @@ export default function App() {
         <Route path="/owner/meetups/:id/edit" element={<PrivateRoute allowedRoles={['owner']}><CreateEditMeetup /></PrivateRoute>} />
 
 
+        {/* Public Landing Pages */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/why-us" element={<WhyChooseUsPage />} />
+        <Route path="/connect" element={<ConnectPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/resources" element={<Resources />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+
         {/* Default */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

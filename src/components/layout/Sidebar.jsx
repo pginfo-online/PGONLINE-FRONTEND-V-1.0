@@ -29,10 +29,10 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const navItems = user?.role === 'admin' ? adminNavItems : ownerNavItems;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+const handleLogout = () => {
+  logout();
+  navigate('/', { replace: true });
+};
 
   return (
     <aside className="sidebar">

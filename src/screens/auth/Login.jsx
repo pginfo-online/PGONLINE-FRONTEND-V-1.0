@@ -38,7 +38,7 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%)',
+      background: 'linear-gradient(135deg, #021734 0%, #0a2540 50%, #000c1d 100%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '1rem',
     }}>
@@ -60,10 +60,10 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
             width: 56, height: 56, borderRadius: 16,
-            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+            background: 'linear-gradient(135deg, #2563eb, #06b6d4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 1rem',
-            boxShadow: '0 8px 20px rgba(79,70,229,0.4)',
+            boxShadow: '0 8px 20px rgba(37,99,235,0.4)',
           }}>
             <Building2 size={28} color="white" />
           </div>

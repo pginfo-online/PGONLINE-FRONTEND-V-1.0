@@ -1,6 +1,20 @@
 // Design token: Colors
 // Brand: Indigo → Violet gradient
 export const colors = {
+  // Brand Landing Colors (From banner1.jpeg analysis)
+  brand: {
+    dark: '#021734',
+    darkSoft: '#f8fafc',
+    darkDeep: '#ffffff',
+    primary: '#2563eb',
+    primaryHover: '#1d4ed8',
+    accent: '#0284c7',
+    gold: '#eab308',
+    lightBg: '#f8fafc',
+    border: '#e2e8f0',
+    textDark: '#0f172a',
+    textMuted: '#475569',
+  },
   // Primary
   primary: {
     50: '#eef2ff',
