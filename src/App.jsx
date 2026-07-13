@@ -10,6 +10,7 @@ import AdminDashboard from './screens/admin/Dashboard';
 import PGApprovals from './screens/admin/PGApprovals';
 import UserManagement from './screens/admin/UserManagement';
 import Analytics from './screens/admin/Analytics';
+import AppVersionManagement from './screens/admin/AppVersionManagement';
 
 // Owner
 import OwnerDashboard from './screens/owner/Dashboard';
@@ -77,6 +78,7 @@ export default function App() {
         <Route path="/admin/meetups" element={<PrivateRoute allowedRoles={['admin']}><MeetupManagement /></PrivateRoute>} />
         <Route path="/admin/users" element={<PrivateRoute allowedRoles={['admin']}><UserManagement /></PrivateRoute>} />
         <Route path="/admin/analytics" element={<PrivateRoute allowedRoles={['admin']}><Analytics /></PrivateRoute>} />
+        <Route path="/admin/app-versions" element={<PrivateRoute allowedRoles={['admin']}><AppVersionManagement /></PrivateRoute>} />
 
 
         {/* Owner Routes */}

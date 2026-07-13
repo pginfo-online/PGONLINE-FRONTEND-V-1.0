@@ -1,134 +1,278 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShieldCheck, MessageSquareCode, CalendarDays, Zap, ArrowRight } from 'lucide-react';
-import useScrollReveal from '../../utils/useScrollReveal';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  ShieldCheck,
+  MessageSquareCode,
+  CalendarDays,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
+import useScrollReveal from "../../utils/useScrollReveal";
 
 const features = [
   {
     icon: ShieldCheck,
-    title: 'Physical Auditing & Badges',
+    title: "Physical Auditing & Badges",
     description:
-      'Our team physically visits accommodations to verify rent, cleanliness, safety exits, WiFi, and meals quality. Verified listings carry a gold audit badge.',
-    color: 'text-blue-600 bg-blue-50 ring-1 ring-blue-100',
-    hoverText: 'group-hover:text-blue-600',
+      "Every listed PG is physically inspected by our verification team. We verify cleanliness, safety standards, WiFi availability, meal quality, and essential amenities before assigning an official verification badge.",
+    color:
+      "bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 border border-blue-200",
+    hover: "group-hover:text-blue-600",
   },
   {
     icon: MessageSquareCode,
-    title: 'Direct Owner Interaction',
+    title: "Direct Owner Interaction",
     description:
-      'Cut out middlemen completely. Chat with owners in real-time, negotiate terms, and get everything in writing — no broker, no delay.',
-    color: 'text-cyan-600 bg-cyan-50 ring-1 ring-cyan-100',
-    hoverText: 'group-hover:text-cyan-600',
+      "Communicate directly with verified owners through real-time chat. Negotiate rent, discuss facilities, clarify terms, and finalize agreements without brokers or unnecessary commissions.",
+    color:
+      "bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600 border border-cyan-200",
+    hover: "group-hover:text-cyan-600",
   },
   {
     icon: CalendarDays,
-    title: 'Community Meetup System',
+    title: "Community Meetup System",
     description:
-      'Owners organize social events for prospective and current tenants. Meet potential roommates before you sign anything.',
-    color: 'text-violet-600 bg-violet-50 ring-1 ring-violet-100',
-    hoverText: 'group-hover:text-violet-600',
+      "Attend owner-hosted community meetups before booking your accommodation. Meet fellow tenants, explore the environment, and build confidence before making your decision.",
+    color:
+      "bg-gradient-to-br from-violet-50 to-violet-100 text-violet-600 border border-violet-200",
+    hover: "group-hover:text-violet-600",
   },
   {
     icon: Zap,
-    title: 'Instant Lead Notifications',
+    title: "Instant Lead Notifications",
     description:
-      'Owners receive dashboard alerts and email notifications the moment a tenant expresses interest or schedules a visit.',
-    color: 'text-amber-600 bg-amber-50 ring-1 ring-amber-100',
-    hoverText: 'group-hover:text-amber-600',
+      "Owners receive instant dashboard alerts and email notifications whenever prospective tenants enquire, schedule visits, or express interest in their property.",
+    color:
+      "bg-gradient-to-br from-amber-50 to-orange-100 text-amber-600 border border-amber-200",
+    hover: "group-hover:text-amber-600",
   },
 ];
 
-const FeatureCard = ({ icon: Icon, title, description, color, hoverText, index, isRevealed }) => (
-  <div
-    className={`group flex flex-col h-full bg-white rounded-[2rem] border border-slate-200/60 p-8 sm:p-10 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] hover:border-slate-300 transition-all duration-500 hover:-translate-y-2 z-10 ${
-      isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-    }`}
-    style={{ transitionDelay: `${index * 100}ms` }}
-  >
-    {/* Icon Container */}
-    <div className={`w-14 h-14 mb-8 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:shadow-sm ${color}`}>
-      <Icon size={26} strokeWidth={1.75} />
-    </div>
-    
-    {/* Text Content */}
-    <div className="flex-grow flex flex-col text-left">
-      <h3 className="font-bold text-slate-900 text-xl tracking-tight mb-4">
+const FeatureCard = ({
+  icon: Icon,
+  title,
+  description,
+  color,
+  hover,
+  index,
+  isRevealed,
+}) => {
+  return (
+    <div
+      className={`
+        group
+        relative
+        flex
+        flex-col
+        h-full
+        overflow-hidden
+        rounded-3xl
+        border
+        border-slate-200
+        bg-white
+        p-8
+        lg:p-10
+        shadow-sm
+        transition-all
+        duration-500
+        hover:-translate-y-3
+        hover:border-blue-200
+        hover:shadow-[0_30px_70px_rgba(15,23,42,0.12)]
+        ${
+          isRevealed
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-12"
+        }
+      `}
+      style={{
+        transitionDelay: `${index * 120}ms`,
+      }}
+    >
+      {/* Animated Gradient Border */}
+
+      <div className="absolute left-0 top-0 h-1 w-full origin-left scale-x-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-orange-500 transition-transform duration-500 group-hover:scale-x-100" />
+
+      {/* Background Glow */}
+
+      <div className="absolute -right-20 -top-20 h-52 w-52 rounded-full bg-blue-100 opacity-0 blur-3xl transition duration-700 group-hover:opacity-40" />
+
+      {/* Icon */}
+
+      <div
+        className={`
+          relative
+          z-10
+          flex
+          h-16
+          w-16
+          items-center
+          justify-center
+          rounded-2xl
+          ${color}
+          transition-all
+          duration-500
+          group-hover:scale-110
+          group-hover:rotate-3
+        `}
+      >
+        <Icon size={30} strokeWidth={1.8} />
+      </div>
+
+      {/* Title */}
+
+      <h3 className="relative z-10 mt-8 text-2xl font-bold leading-tight text-slate-900">
         {title}
       </h3>
-      <p className="text-base text-slate-500 leading-relaxed font-medium mb-8">
+
+      {/* Description */}
+
+      <p className="relative z-10 mt-5 flex-grow text-[17px] leading-8 text-slate-600">
         {description}
       </p>
+
+      {/* Divider */}
+
+      <div className="relative z-10 my-8 h-px bg-slate-200" />
+
+      {/* Footer */}
+
+      <div
+        className={`
+          relative
+          z-10
+          inline-flex
+          items-center
+          gap-2
+          font-semibold
+          text-slate-500
+          transition-all
+          duration-300
+          ${hover}
+        `}
+      >
+        <span>Learn more</span>
+
+        <ArrowRight
+          size={18}
+          className="transition-transform duration-300 group-hover:translate-x-2"
+        />
+      </div>
     </div>
-    
-    {/* Footer Link */}
-    <div className={`mt-auto flex items-center gap-2 text-sm font-bold text-slate-400 ${hoverText} transition-colors duration-300`}>
-      <span>Learn more</span>
-      <ArrowRight 
-        size={18} 
-        className="transform -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out" 
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 export default function Features() {
-  const [revealRef, isRevealed] = useScrollReveal({ threshold: 0.15 });
+  const [revealRef, isRevealed] = useScrollReveal({
+    threshold: 0.15,
+  });
 
   return (
     <section
       id="features"
-      className="py-24 md:py-32 bg-[#F8FAFC] relative overflow-hidden"
+      className="relative overflow-hidden bg-slate-50 py-24 lg:py-32"
     >
-      <div className="max-w-[90rem] mx-auto px-6 lg:px-12 space-y-16 md:space-y-24 relative z-10">
-        
-        {/* Header Section (Perfectly Centered) */}
-        <div 
+      {/* Background Decoration */}
+
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-100/40 blur-3xl" />
+
+        <div className="absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-cyan-100/30 blur-3xl" />
+
+        <div className="absolute bottom-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-orange-100/30 blur-3xl" />
+
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f020_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f020_1px,transparent_1px)] bg-[size:70px_70px]" />
+
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+
+        {/* ================= Header ================= */}
+
+        <div
           ref={revealRef}
-          className={`flex flex-col items-center text-center space-y-6 transition-all duration-700 ease-out ${
-            isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          className={`mx-auto max-w-4xl text-center transition-all duration-700 ${
+            isRevealed
+              ? "translate-y-0 opacity-100"
+              : "translate-y-10 opacity-0"
           }`}
         >
-          <span className="inline-block py-1.5 px-4 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest shadow-sm">
+          <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-5 py-2 text-xs font-bold uppercase tracking-[0.25em] text-blue-700 shadow-sm">
             Platform Capabilities
           </span>
-          
-          {/* Using text-balance ensures the text wraps beautifully and symmetrically */}
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] text-balance max-w-4xl">
-            High-Performance Features Built for Direct Deals
+
+          <h2 className="mt-8 text-4xl font-black leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+            High-Performance Features
+            <br />
+            Built for Direct Deals
           </h2>
-          
-          <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-3xl font-medium text-balance">
-            We provide premium tools that help tenants discover verified PGs and help owners grow their rental portfolio efficiently.
+
+          <p className="mx-auto mt-8 max-w-3xl text-lg leading-9 text-slate-600 lg:text-xl">
+            Discover verified PGs, connect directly with trusted owners,
+            participate in community meetups, and manage your accommodation
+            journey through a modern platform designed for transparency,
+            trust, and speed.
           </p>
         </div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8">
+        {/* ================= Cards ================= */}
+
+        <div className="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-2">
+
           {features.map((feature, index) => (
-            <FeatureCard 
-              key={index} 
-              {...feature} 
-              index={index} 
-              isRevealed={isRevealed} 
+            <FeatureCard
+              key={index}
+              {...feature}
+              index={index}
+              isRevealed={isRevealed}
             />
           ))}
+
         </div>
 
-        {/* CTA Footer */}
-        <div 
-          className={`flex justify-center pt-4 transition-all duration-700 delay-500 ease-out ${
-            isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        {/* ================= CTA ================= */}
+
+        <div
+          className={`mt-20 flex justify-center transition-all duration-700 delay-500 ${
+            isRevealed
+              ? "translate-y-0 opacity-100"
+              : "translate-y-10 opacity-0"
           }`}
         >
           <Link
             to="/features"
-            className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-slate-900 text-white font-bold text-base hover:bg-blue-600 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20 w-full sm:w-auto"
+            className="
+              group
+              inline-flex
+              items-center
+              gap-3
+              rounded-2xl
+              bg-gradient-to-r
+              from-blue-600
+              to-indigo-600
+              px-8
+              py-4
+              text-base
+              font-semibold
+              text-white
+              shadow-lg
+              shadow-blue-500/20
+              transition-all
+              duration-300
+              hover:-translate-y-1
+              hover:shadow-2xl
+              hover:shadow-blue-500/30
+            "
           >
-            View All Platform Features 
-            <ArrowRight size={20} className="transition-transform duration-300 group-hover:translate-x-1" />
+            View All Platform Features
+
+            <ArrowRight
+              size={18}
+              className="transition-transform duration-300 group-hover:translate-x-1"
+            />
           </Link>
         </div>
-        
+
       </div>
     </section>
   );

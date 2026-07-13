@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Building2, Menu, X, Phone, ChevronDown } from 'lucide-react';
+import pgLogo from '../../assets/pgLogo.png';
 
 const navLinks = [
   { label: 'Home', path: '/' },
@@ -77,14 +78,26 @@ export default function Navbar() {
       >
         <div className="navbar-inner">
           {/* Logo */}
-          <Link to="/" className="navbar-logo" aria-label="PGinfo.online home">
+          <Link
+            to="/"
+            className="flex items-center"
+          >
+            <img
+              src={pgLogo}
+              alt="PGinfo.online"
+              className="h-16 w-auto object-contain"
+            />
+          </Link>
+          {/* <Link to="/" className="navbar-logo" aria-label="PGinfo.online home">
             <div className="navbar-logo-icon">
               <Building2 size={18} />
             </div>
+           
+              <img src={pgLogo} alt="PGinfo.online Logo" />
             <span className="navbar-logo-text">
               PGinfo<span className="navbar-logo-accent">.online</span>
             </span>
-          </Link>
+          </Link> */}
 
           {/* ── Desktop Navigation Links ── */}
           <div className="navbar-links-desktop">

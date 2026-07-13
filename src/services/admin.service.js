@@ -31,6 +31,10 @@ export const adminService = {
     return res.data.data.user;
   },
   deleteUser: async (id) => api.delete(`/admin/users/${id}`),
+  createOwner: async (userData) => {
+    const res = await api.post('/admin/users', userData);
+    return res.data.data.user;
+  },
 
   // Analytics
   getAnalytics: async () => {

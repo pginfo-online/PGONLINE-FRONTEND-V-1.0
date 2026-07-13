@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle, Clock } from 'lucide-react';
 import PageWrapper from '../../components/layout/PageWrapper';
@@ -37,7 +37,8 @@ const initialForm = {
 export default function EditPG() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
+  const isSubmittingRef = useRef(false);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -83,12 +84,12 @@ export default function EditPG() {
         contactPhone: pg.contactPhone || '',
         contactWhatsapp: pg.contactWhatsapp || '',
         isAvailable: pg.isAvailable ?? true,
-        availableRooms: pg.availableRooms ?? 0,
+        availableRooms: pg.availableRooms != null ? String(pg.availableRooms) : '',
         facilities: pg.facilities || [],
         rent: {
-          single: pg.rent?.single !== undefined ? String(pg.rent.single) : '',
-          double: pg.rent?.double !== undefined ? String(pg.rent.double) : '',
-          triple: pg.rent?.triple !== undefined ? String(pg.rent.triple) : '',
+          single: pg.rent && pg.rent.single != null ? String(pg.rent.single) : '',
+          double: pg.rent && pg.rent.double != null ? String(pg.rent.double) : '',
+          triple: pg.rent && pg.rent.triple != null ? String(pg.rent.triple) : '',
         },
         photos: pg.photos || [],
       });
@@ -149,7 +150,7 @@ export default function EditPG() {
       newErrors.tripleRent = 'Rent cannot be negative';
     }
 
-    if (form.availableRooms !== undefined && Number(form.availableRooms) < 0) {
+    if (form.availableRooms !== undefined && form.availableRooms !== '' && Number(form.availableRooms) < 0) {
       newErrors.availableRooms = 'Rooms count cannot be negative';
     }
 
@@ -164,16 +165,25 @@ export default function EditPG() {
       return;
     }
 
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setSaving(true);
+
     try {
+      const cleanNumberOrNull = (val) => {
+        if (val === null || val === undefined) return null;
+        const str = String(val).trim();
+        return str === '' ? null : Number(str);
+      };
+
       const data = {
         ...form,
         rent: {
-          single: form.rent.single ? Number(form.rent.single) : undefined,
-          double: form.rent.double ? Number(form.rent.double) : undefined,
-          triple: form.rent.triple ? Number(form.rent.triple) : undefined,
+          single: cleanNumberOrNull(form.rent.single),
+          double: cleanNumberOrNull(form.rent.double),
+          triple: cleanNumberOrNull(form.rent.triple),
         },
-        availableRooms: Number(form.availableRooms) || 0,
+        availableRooms: cleanNumberOrNull(form.availableRooms),
       };
 
       await pgService.update(id, data);
@@ -181,7 +191,7 @@ export default function EditPG() {
       navigate('/owner/listings');
     } catch (err) {
       toast.error(err.message || 'Failed to update PG details');
-    } finally {
+      isSubmittingRef.current = false;
       setSaving(false);
     }
   };
@@ -217,7 +227,7 @@ export default function EditPG() {
   return (
     <PageWrapper title={`Edit: ${form.name}`} subtitle="Update details and photos of your PG" action={backAction}>
       <form onSubmit={handleSubmit}>
-        
+
         {pendingRequest && (
           <div style={{
             background: '#fffbeb',
@@ -273,7 +283,7 @@ export default function EditPG() {
           </div>
         )}
 
-        
+
         {/* Basic Info */}
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1.25rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -287,7 +297,7 @@ export default function EditPG() {
               error={errors.name}
               placeholder="e.g. Sunrise Premium PG"
             />
-            
+
             <div className="form-group">
               <label className="label">City *</label>
               <select className="input" value={form.city} onChange={(e) => update('city', e.target.value)}>
@@ -376,7 +386,7 @@ export default function EditPG() {
               placeholder="e.g. 5000"
             />
           </div>
-          
+
           <div className="grid-3" style={{ alignItems: 'center', marginTop: '0.5rem' }}>
             <div className="form-group">
               <label className="label">Food Option</label>
@@ -387,7 +397,7 @@ export default function EditPG() {
                 <option value="both">Veg & Non-Veg</option>
               </select>
             </div>
-            
+
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', paddingTop: '1.25rem' }}>
               <input
                 type="checkbox"
@@ -455,7 +465,7 @@ export default function EditPG() {
               error={errors.contactPhone}
               placeholder="e.g. 9876543210"
             />
-            
+
             <Input
               label="WhatsApp Number"
               value={form.contactWhatsapp}
@@ -508,7 +518,7 @@ export default function EditPG() {
           </Button>
 
         </div>
-        
+
       </form>
     </PageWrapper>
   );

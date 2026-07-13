@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Users, BarChart3,
   Home, ListPlus, MessageSquare, Calendar,
-  ShieldCheck, LogOut, CheckCircle
+  ShieldCheck, LogOut, CheckCircle, Smartphone
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
@@ -13,6 +13,7 @@ const adminNavItems = [
   { label: 'Meetup Management', to: '/admin/meetups', icon: Calendar },
   { label: 'User Management', to: '/admin/users', icon: Users },
   { label: 'Analytics', to: '/admin/analytics', icon: BarChart3 },
+  { label: 'App Versions', to: '/admin/app-versions', icon: Smartphone },
 ];
 
 const ownerNavItems = [
