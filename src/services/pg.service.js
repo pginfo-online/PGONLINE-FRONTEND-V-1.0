@@ -13,6 +13,10 @@ export const pgService = {
     const res = await api.get('/pg/my');
     return res.data.data.pgs;
   },
+    getMyPaginated: async (params, options = {}) => {
+    const res = await api.get('/pg/my/paginated', { params, ...options });
+    return res.data; // { success, message, data: { pgs, pagination } }
+  },
   create: async (data) => {
     const res = await api.post('/pg', data);
     return res.data.data.pg;

@@ -1,25 +1,41 @@
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ShieldCheck, Star, MapPin, Users } from 'lucide-react';
 import heroIllustration from '../../assets/hero-illustration.png';
 
+const reveal = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      delay,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+};
+
 export default function Hero() {
   return (
     <section id="hero" className="hero-section">
-      {/* Background decorations */}
       <div className="hero-bg-grid" aria-hidden="true" />
       <div className="hero-bg-blob hero-bg-blob-1" aria-hidden="true" />
       <div className="hero-bg-blob hero-bg-blob-2" aria-hidden="true" />
 
       <div className="hero-container">
-        {/* ── Left Column ── */}
-        <div className="hero-left">
-          {/* Subtitle Badge */}
+        <motion.div
+          className="hero-left"
+          initial="hidden"
+          animate="visible"
+          custom={0.05}
+          variants={reveal}
+        >
           <div className="hero-subtitle">
             <span className="hero-subtitle-dot" />
             PG Accommodation Platform — Since 2024
           </div>
 
-          {/* Main Headline */}
           <h1 className="hero-headline">
             Find Your Perfect PG
             <br />
@@ -32,14 +48,12 @@ export default function Hero() {
             </span>
           </h1>
 
-          {/* Description */}
           <p className="hero-description">
-            Discover verified paying guest accommodations across India's top cities. 
-            Connect directly with owners, schedule visits instantly, and join a 
+            Discover verified paying guest accommodations across India's top cities.
+            Connect directly with owners, schedule visits instantly, and join a
             real tenant community — all without paying a single broker fee.
           </p>
 
-          {/* CTA Button */}
           <div className="hero-cta-group">
             <Link to="/services" className="hero-cta-primary">
               Explore Listings
@@ -50,7 +64,6 @@ export default function Hero() {
             </Link>
           </div>
 
-          {/* Trust Indicators */}
           <div className="hero-trust-bar">
             <div className="hero-trust-item">
               <div className="hero-trust-icon hero-trust-icon-blue">
@@ -86,22 +99,26 @@ export default function Hero() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ── Right Column ── */}
-        <div className="hero-right">
+        <motion.div
+          className="hero-right"
+          initial="hidden"
+          animate="visible"
+          custom={0.18}
+          variants={reveal}
+        >
           <div className="hero-image-wrapper">
-            {/* Subtle glow behind image */}
             <div className="hero-image-glow" aria-hidden="true" />
 
-            {/* Main illustration */}
-            <img
+            <motion.img
               src={heroIllustration}
               alt="PGinfo.online app showcase — smart PG finder with map search and verified listings"
               className="hero-image"
+              whileHover={{ scale: 1.02, rotate: -0.35 }}
+              transition={{ type: 'spring', stiffness: 150, damping: 14 }}
             />
 
-            {/* Floating Card: Stats */}
             <div className="hero-float-card hero-float-stats">
               <div className="hero-float-stats-icon">
                 <MapPin size={16} />
@@ -112,7 +129,6 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Floating Card: Zero Brokerage */}
             <div className="hero-float-card hero-float-brokerage">
               <div className="hero-float-brokerage-badge">₹0</div>
               <div>
@@ -121,10 +137,9 @@ export default function Hero() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
       <div className="hero-scroll-indicator" aria-hidden="true">
         <span className="hero-scroll-text">Scroll to explore</span>
         <div className="hero-scroll-mouse">

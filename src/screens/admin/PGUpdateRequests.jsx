@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   CheckCircle,
@@ -13,11 +13,14 @@ import {
   Building2,
   MessageSquare,
   RefreshCw,
+  Search,
 } from 'lucide-react';
 import PageWrapper from '../../components/layout/PageWrapper';
+import Pagination from '../../components/common/Pagination';
 import adminService from '../../services/admin.service';
 
 const STATUS_TABS = ['pending', 'approved', 'rejected', 'correction_required', 'cancelled'];
+const PAGE_SIZE = 10;
 
 export default function PGUpdateRequests() {
   const [requests, setRequests] = useState([]);
@@ -25,33 +28,85 @@ export default function PGUpdateRequests() {
   const [loadError, setLoadError] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [expandedRequestId, setExpandedRequestId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: PAGE_SIZE,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
   
   // Modal states
   const [actionModal, setActionModal] = useState(null); // { type: 'reject' | 'correction', id: string }
   const [actionComment, setActionComment] = useState('');
+  const abortRef = useRef(null);
 
-  const loadRequests = async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const loadRequests = useCallback(async () => {
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await adminService.getAllUpdateRequests({ status: activeTab, limit: 50 });
-      setRequests(Array.isArray(data.requests) ? data.requests : []);
+      const data = await adminService.getAllUpdateRequests({
+        status: activeTab,
+        search: debouncedSearch || undefined,
+        page,
+        limit: PAGE_SIZE,
+        signal: controller.signal,
+      });
+
+      if (!controller.signal.aborted) {
+        setRequests(Array.isArray(data.requests) ? data.requests : []);
+        setPagination(data.pagination || {
+          total: 0,
+          page,
+          limit: PAGE_SIZE,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        });
+      }
     } catch (err) {
+      if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') return;
       const message = err.message || 'Unable to load update requests';
       setLoadError(message);
       setRequests([]);
       toast.error('Failed to load update requests: ' + message);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, [activeTab, debouncedSearch, page]);
 
   useEffect(() => {
     loadRequests();
-  }, [activeTab]);
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, [loadRequests]);
 
   const toggleExpand = (id) => {
     setExpandedRequestId(expandedRequestId === id ? null : id);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(Math.max(1, Math.min(newPage, pagination.totalPages || 1)));
   };
 
   const handleApprove = async (id) => {
@@ -276,6 +331,44 @@ export default function PGUpdateRequests() {
 
   return (
     <PageWrapper title="PG Update Requests" subtitle="Review edits proposed by owners before they go live">
+      <div style={{ position: 'relative', marginBottom: '1rem' }}>
+        <Search
+          size={18}
+          style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            color: '#9ca3af', pointerEvents: 'none',
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Search by PG name, area, city, owner, phone or comment..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="input"
+          style={{
+            paddingLeft: '2.5rem',
+            height: 42,
+            borderRadius: 8,
+            border: '1px solid #e5e7eb',
+            fontSize: '0.875rem',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <span style={{ color: '#6b7280', fontSize: '0.8125rem' }}>
+          Showing {pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}–
+          {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} requests
+        </span>
+        {searchTerm.trim() && (
+          <button className="btn btn-sm btn-secondary" onClick={() => setSearchTerm('')}>
+            Clear search
+          </button>
+        )}
+      </div>
+
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid #e5e7eb' }}>
         {STATUS_TABS.map((tab) => (
@@ -318,7 +411,7 @@ export default function PGUpdateRequests() {
       ) : requests.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
           <Building2 size={48} style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
-          <p>No update requests found in this tab.</p>
+          <p>{searchTerm.trim() ? 'No update requests match your search.' : 'No update requests found in this tab.'}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -418,6 +511,14 @@ export default function PGUpdateRequests() {
             );
           })}
         </div>
+      )}
+
+      {pagination.totalPages > 1 && (
+        <Pagination
+          currentPage={page}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Reject / Correction Modal */}

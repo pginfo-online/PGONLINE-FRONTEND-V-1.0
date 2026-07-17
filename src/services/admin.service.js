@@ -4,8 +4,21 @@ import { parsePaginatedResponse } from '../utils/apiHelpers';
 export const adminService = {
   // PG management
   getAllPGs: async (params) => {
-    const res = await api.get('/admin/pgs', { params });
-    return res.data.data;
+    const { signal, ...rest } = params;
+    const res = await api.get('/admin/pgs', { params: rest, signal });
+    const { items, pagination } = parsePaginatedResponse(res, 'pgs');
+
+    return {
+      pgs: items,
+      pagination: pagination ?? {
+        total: items.length,
+        page: Number(rest.page) || 1,
+        limit: Number(rest.limit) || items.length || 20,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
   },
   approvePG: async (id) => {
     const res = await api.put(`/admin/pgs/${id}/approve`);

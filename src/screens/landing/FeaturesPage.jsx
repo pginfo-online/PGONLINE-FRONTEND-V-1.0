@@ -12,9 +12,9 @@ export default function FeaturesPage() {
   }, []);
 
   return (
-    <div className="bg-white min-h-screen text-brand-text-dark select-none">
+    <div className="min-h-screen bg-white text-brand-text-dark select-none">
       <Navbar />
-      <div className="pt-20">
+      <div className="pt-16 sm:pt-18 lg:pt-20">
         <Features />
       </div>
       <Footer />

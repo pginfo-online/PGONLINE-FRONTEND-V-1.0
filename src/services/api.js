@@ -22,17 +22,37 @@ api.interceptors.request.use(
 );
 
 // ─── Response Interceptor: Handle Errors ─────────────────────────────────────
+// ─── Request Interceptor: Attach JWT ──────────────────────────────────────────
+api.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ─── Response Interceptor: Handle Errors ─────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // ✅ Do NOT transform cancellation errors – let them propagate as is
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
       window.location.href = '/login';
     }
+
     let message = error.response?.data?.message || error.message || 'Something went wrong';
     if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
       message = error.response.data.errors.map(e => e.message).join(', ');
     }
+
     return Promise.reject(new Error(message));
   }
 );

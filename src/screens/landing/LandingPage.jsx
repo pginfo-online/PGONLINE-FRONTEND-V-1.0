@@ -34,15 +34,17 @@ export default function LandingPage() {
   }, [location]);
 
   return (
-    <div className="bg-brand-dark min-h-screen text-white select-none">
+    <div className="min-h-screen bg-slate-950 text-white select-none">
       <Navbar />
-      <Hero />
-      <Features />
-      {/* <AboutUs /> */}
-      {/* <Services /> */}
-      {/* <WhyChooseUs /> */}
-      {/* <Connect /> */}
-      {/* <ContactUs /> */}
+      <main className="overflow-x-hidden">
+        <Hero />
+        <Features />
+        <AboutUs />
+        {/* <Services /> */}
+        {/* <WhyChooseUs /> */}
+        {/* <Connect /> */}
+        {/* <ContactUs /> */}
+      </main>
       <Footer />
     </div>
   );
