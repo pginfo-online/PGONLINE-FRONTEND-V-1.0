@@ -30,7 +30,7 @@ export default function Terms() {
 
       {/* Main Text Content */}
       <section className="py-16 max-w-4xl mx-auto px-6 text-left space-y-10 text-gray-300 leading-relaxed text-sm sm:text-base">
-        
+
         {/* Warning Alert */}
         <div className="p-5 rounded-2xl bg-brand-primary/5 border border-brand-primary/20 flex gap-4 items-start">
           <ShieldAlert size={24} className="text-brand-accent shrink-0 mt-0.5" />
@@ -67,9 +67,26 @@ export default function Terms() {
             PGinfo.online is not liable for rental disputes, deposit refund delays, property damage, roommate conflicts, or personal incidents arising during occupancy. Users are advised to exercise standard due diligence prior to executing agreements.
           </p>
         </div>
+        <div className="rounded-2xl border border-brand-primary/20 bg-white/5 p-6">
+          <h2 className="text-xl font-bold text-white mb-3">
+           5. About PGinfo.online
+          </h2>
+
+          <p>
+            <strong>PGinfo.online</strong> is a digital platform developed,
+            owned, operated, and managed by <strong>Worknai</strong>.
+            Throughout these Terms & Conditions, the terms
+            <strong>"PGinfo.online"</strong>,
+            <strong>"we"</strong>,
+            <strong>"our"</strong>,
+            and
+            <strong>"us"</strong>
+            refer to Worknai and its PGinfo.online platform unless otherwise stated.
+          </p>
+        </div>
 
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-white border-l-4 border-brand-primary pl-3">5. Platform Moderation</h2>
+          <h2 className="text-xl font-bold text-white border-l-4 border-brand-primary pl-3">6. Platform Moderation</h2>
           <p>
             We reserve the right to remove listings, suspend user accounts, or reject verification requests that violate safety standards, carry spam contents, or receive multiple validated complaints from tenants.
           </p>

@@ -65,6 +65,7 @@ export default function Privacy() {
             We enforce strict sharing limitations. Phone numbers and email coordinates are shared between tenants and owners *only* when a visit request is approved or when contact details are explicitly requested by a registered user. We never sell profile databases to third-party marketing companies.
           </p>
         </div>
+        
 
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white border-l-4 border-brand-accent pl-3">4. Security Measures</h2>
@@ -79,6 +80,19 @@ export default function Privacy() {
             Users can access, edit, or request complete deletion of their account databases at any time. Simply submit a deletion ticket in our support portal or email details directly to support@pginfo.online.
           </p>
         </div>
+        <div className="rounded-2xl border border-brand-accent/20 bg-white/5 p-6">
+  <h2 className="text-xl font-bold text-white mb-3">
+ 6. Platform Ownership
+  </h2>
+
+  <p>
+    <strong>PGinfo.online</strong> is a digital accommodation platform
+    developed, owned, operated, and maintained by
+    <strong> Worknai</strong>. This Privacy Policy describes how
+    Worknai collects, processes, stores, and protects information
+    obtained through the PGinfo.online website and mobile application.
+  </p>
+</div>
       </section>
 
       <Footer />

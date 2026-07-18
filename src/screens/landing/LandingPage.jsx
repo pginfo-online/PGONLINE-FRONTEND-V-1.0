@@ -40,7 +40,7 @@ export default function LandingPage() {
         <Hero />
         <Features />
         <AboutUs />
-        {/* <Services /> */}
+        <Services />
         {/* <WhyChooseUs /> */}
         {/* <Connect /> */}
         {/* <ContactUs /> */}
