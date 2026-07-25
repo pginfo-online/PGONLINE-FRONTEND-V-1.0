@@ -157,6 +157,9 @@ export default function AddPG() {
           <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1.25rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <MapPin size={18} color="#4f46e5" /> Basic Info
           </h3>
+          <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.875rem', color: '#1e40af', border: '1px solid #bfdbfe' }}>
+            <strong>Note:</strong> Please enter an accurate City, Area, and Address. We use this to automatically place your PG on the map for "Near Me" searches.
+          </div>
           <div className="grid-2">
             <Input
               label="PG Name *"
