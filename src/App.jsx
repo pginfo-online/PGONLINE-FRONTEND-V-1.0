@@ -19,6 +19,8 @@ import AddPG from './screens/owner/AddPG';
 import EditPG from './screens/owner/EditPG';
 import Leads from './screens/owner/Leads';
 import Visits from './screens/owner/Visits';
+import ChatbotListing from './screens/owner/ChatbotListing';
+
 
 // New features
 import PGUpdateRequests from './screens/admin/PGUpdateRequests';
@@ -85,6 +87,11 @@ export default function App() {
         <Route path="/owner/dashboard" element={<PrivateRoute allowedRoles={['owner']}><OwnerDashboard /></PrivateRoute>} />
         <Route path="/owner/listings" element={<PrivateRoute allowedRoles={['owner']}><MyListings /></PrivateRoute>} />
         <Route path="/owner/listings/add" element={<PrivateRoute allowedRoles={['owner']}><AddPG /></PrivateRoute>} />
+
+        <Route path="/owner/listings/add/chat" element={<PrivateRoute allowedRoles={['owner']}><ChatbotListing /></PrivateRoute>} />
+
+
+
         <Route path="/owner/listings/:id/edit" element={<PrivateRoute allowedRoles={['owner']}><EditPG /></PrivateRoute>} />
         <Route path="/owner/leads" element={<PrivateRoute allowedRoles={['owner']}><Leads /></PrivateRoute>} />
         <Route path="/owner/visits" element={<PrivateRoute allowedRoles={['owner']}><Visits /></PrivateRoute>} />

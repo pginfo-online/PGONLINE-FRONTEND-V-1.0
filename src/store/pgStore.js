@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import api from '../services/api';
 
+const normalizePG = (pg) => (pg ? { ...pg, _id: pg._id || pg.id } : pg);
+
 const usePGStore = create((set, get) => ({
   pgs: [],
   pagination: null,
@@ -16,9 +18,10 @@ const usePGStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get('/pg', { params: { ...get().filters, ...params } });
+      const payload = response.data?.data || [];
       set({
-        pgs: response.data.data,
-        pagination: response.data.pagination,
+        pgs: Array.isArray(payload) ? payload.map(normalizePG) : [],
+        pagination: response.data?.pagination || null,
         loading: false,
       });
     } catch (err) {
@@ -30,7 +33,8 @@ const usePGStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get('/pg/my');
-      set({ myPGs: response.data.data.pgs, loading: false });
+      const pgs = response.data?.data?.pgs || [];
+      set({ myPGs: pgs.map(normalizePG), loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
     }
@@ -40,8 +44,9 @@ const usePGStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get(`/pg/${id}`);
-      set({ currentPG: response.data.data.pg, loading: false });
-      return response.data.data.pg;
+      const pg = normalizePG(response.data?.data?.pg || null);
+      set({ currentPG: pg, loading: false });
+      return pg;
     } catch (err) {
       set({ error: err.message, loading: false });
       return null;
@@ -49,24 +54,36 @@ const usePGStore = create((set, get) => ({
   },
 
   createPG: async (data) => {
-    const response = await api.post('/pg', data);
-    const newPG = response.data.data.pg;
-    set((state) => ({ myPGs: [newPG, ...state.myPGs] }));
-    return newPG;
+    try {
+      const response = await api.post('/pg', data);
+      const newPG = normalizePG(response.data?.data?.pg || response.data?.pg || response.data);
+      set((state) => ({
+        myPGs: [newPG, ...state.myPGs.filter((p) => p?._id !== newPG?._id)],
+        pgs: [newPG, ...state.pgs.filter((p) => p?._id !== newPG?._id)],
+      }));
+      return newPG;
+    } catch (err) {
+      set({ error: err.message });
+      throw err;
+    }
   },
 
   updatePG: async (id, data) => {
     const response = await api.put(`/pg/${id}`, data);
-    const updated = response.data.data.pg;
+    const updated = normalizePG(response.data?.data?.pg || response.data?.pg || null);
     set((state) => ({
       myPGs: state.myPGs.map((p) => (p._id === id ? updated : p)),
+      pgs: state.pgs.map((p) => (p._id === id ? updated : p)),
     }));
     return updated;
   },
 
   deletePG: async (id) => {
     await api.delete(`/pg/${id}`);
-    set((state) => ({ myPGs: state.myPGs.filter((p) => p._id !== id) }));
+    set((state) => ({
+      myPGs: state.myPGs.filter((p) => p._id !== id),
+      pgs: state.pgs.filter((p) => p._id !== id),
+    }));
   },
 
   clearCurrentPG: () => set({ currentPG: null }),

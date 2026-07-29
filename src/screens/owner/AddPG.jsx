@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle } from 'lucide-react';
+import { Upload, X, Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle, Sparkles } from 'lucide-react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import pgService from '../../services/pg.service';
 import Input from '../../components/ui/Input';
@@ -143,9 +143,14 @@ export default function AddPG() {
   };
 
   const backAction = (
-    <Button variant="secondary" size="sm" onClick={() => navigate('/owner/listings')} icon={<ArrowLeft size={16} />}>
-      Back to Listings
-    </Button>
+    <div style={{ display: 'flex', gap: '0.75rem' }}>
+      <Button variant="secondary" size="sm" onClick={() => navigate('/owner/listings/add/chat')} icon={<Sparkles size={16} />}>
+        Use AI Assistant
+      </Button>
+      <Button variant="secondary" size="sm" onClick={() => navigate('/owner/listings')} icon={<ArrowLeft size={16} />}>
+        Back to Listings
+      </Button>
+    </div>
   );
 
   return (
