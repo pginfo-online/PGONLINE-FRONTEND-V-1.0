@@ -45,6 +45,16 @@ export const pgService = {
     return res.data.data.requests;
   },
   cancelUpdateRequest: async (id) => api.delete(`/pg/my/update-requests/${id}`),
+  
+  getSuggestions: async (query) => {
+    const res = await api.get('/pg/suggestions', { params: { q: query } });
+    return res.data.data.suggestions;
+  },
+
+  aiSearch: async (query) => {
+    const res = await api.get('/pg/ai-search', { params: { q: query } });
+    return res.data.data;
+  },
 };
 
 export default pgService;

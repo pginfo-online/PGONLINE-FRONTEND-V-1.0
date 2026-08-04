@@ -21,6 +21,7 @@
    Global UX & Performance Improvements
    ========================================================================== */
 
+@layer base {
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
@@ -115,8 +116,10 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
+} /* End @layer base */
 
 /* ─── Layout ──────────────────────────────────────────────────────────── */
+@layer components {
 .app-layout {
   display: flex;
   min-height: 100vh;
@@ -487,8 +490,10 @@ body {
   border-color: var(--color-primary);
   background: rgba(79, 70, 229, 0.02);
 }
+} /* End @layer components */
 
 /* ─── Utilities ───────────────────────────────────────────────────────── */
+@layer utilities {
 .text-primary { color: var(--color-primary) !important; }
 .text-muted { color: var(--color-text-secondary) !important; }
 .flex { display: flex; }
@@ -506,6 +511,7 @@ body {
 .mt-4 { margin-top: 1rem; }
 .mb-4 { margin-bottom: 1rem; }
 .mb-6 { margin-bottom: 1.5rem; }
+}
 
 @media (max-width: 768px) {
   .main-content { margin-left: 0; }
@@ -516,6 +522,7 @@ body {
 }
 
 
+@layer components {
 /* ═══════════════════════════════════════════════════════════════════════════
    LANDING NAVBAR
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1477,3 +1484,4 @@ body {
     max-width: 280px;
   }
 }
+} /* End @layer components */

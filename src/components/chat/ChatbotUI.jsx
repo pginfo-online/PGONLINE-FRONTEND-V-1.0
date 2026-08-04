@@ -59,8 +59,8 @@ export default function ChatbotUI({ onListingCreated }) {
           // Re-evaluate missing fields
           const mandatory = ['name', 'city', 'area', 'address', 'contactPhone'];
           const missing = mandatory.filter((f) => !conv.listingData?.[f]);
-          const hasRent = conv.listingData?.rent?.single || conv.listingData?.rent?.double || conv.listingData?.rent?.triple;
-          if (!hasRent) missing.push('rent');
+          const hasRoomConfigs = conv.listingData?.roomConfigs && conv.listingData.roomConfigs.length > 0;
+          if (!hasRoomConfigs) missing.push('roomConfigs');
           setMissingFields(missing);
         }
       } catch {
@@ -100,7 +100,7 @@ export default function ChatbotUI({ onListingCreated }) {
         timestamp: new Date().toISOString() 
       }]);
       setListingData({});
-      setMissingFields(['name', 'city', 'area', 'address', 'contactPhone', 'rent']);
+      setMissingFields(['name', 'city', 'area', 'address', 'contactPhone', 'roomConfigs']);
       setStep('init');
       setPhotos([]);
       setInput('');
@@ -176,8 +176,8 @@ export default function ChatbotUI({ onListingCreated }) {
     // Re-evaluate missing fields locally
     const mandatory = ['name', 'city', 'area', 'address', 'contactPhone'];
     const missing = mandatory.filter((f) => !updatedData[f]);
-    const hasRent = updatedData.rent?.single || updatedData.rent?.double || updatedData.rent?.triple;
-    if (!hasRent) missing.push('rent');
+    const hasRoomConfigs = updatedData.roomConfigs && updatedData.roomConfigs.length > 0;
+    if (!hasRoomConfigs) missing.push('roomConfigs');
     setMissingFields(missing);
 
     if (missing.length === 0) {
@@ -254,7 +254,7 @@ export default function ChatbotUI({ onListingCreated }) {
     if (listingData.area) filledCount++;
     if (listingData.address) filledCount++;
     if (listingData.contactPhone) filledCount++;
-    if (listingData.rent?.single || listingData.rent?.double || listingData.rent?.triple) filledCount++;
+    if (listingData.roomConfigs && listingData.roomConfigs.length > 0) filledCount++;
     return Math.round((filledCount / totalFields) * 100);
   };
 
@@ -368,7 +368,9 @@ export default function ChatbotUI({ onListingCreated }) {
                 <div className="card-top-row">
                   <h4 className="card-title-text">{listingData.name || "My Premium PG Listing"}</h4>
                   <div className="price-tag">
-                    ₹{listingData.rent?.single || listingData.rent?.double || listingData.rent?.triple || "0"}/mo
+                    {listingData.roomConfigs && listingData.roomConfigs.length > 0 
+                      ? `Starts ₹${Math.min(...listingData.roomConfigs.map(rc => rc.rent || Infinity))}/mo`
+                      : '₹0/mo'}
                   </div>
                 </div>
 
@@ -476,32 +478,20 @@ export default function ChatbotUI({ onListingCreated }) {
                 </div>
               </div>
 
-              {/* Field: Rent sharing options */}
+              {/* Field: Room Configs options */}
               <div className="field-row">
-                <div className="field-label-cell">Rent (Single/Double/Triple):</div>
+                <div className="field-label-cell">Room Configurations:</div>
                 <div className="field-value-cell">
-                  {editingField === 'rent' ? (
-                    <div className="nested-rent-editors">
-                      <input type="number" placeholder="Single" value={editValueRent.single} onChange={(e) => setEditValueRent({...editValueRent, single: e.target.value})} />
-                      <input type="number" placeholder="Double" value={editValueRent.double} onChange={(e) => setEditValueRent({...editValueRent, double: e.target.value})} />
-                      <input type="number" placeholder="Triple" value={editValueRent.triple} onChange={(e) => setEditValueRent({...editValueRent, triple: e.target.value})} />
-                    </div>
-                  ) : (
-                    <span>
-                      {listingData.rent?.single || listingData.rent?.double || listingData.rent?.triple ? (
-                        `₹${listingData.rent.single || '-'} / ₹${listingData.rent.double || '-'} / ₹${listingData.rent.triple || '-'}`
-                      ) : (
-                        <em className="missing-alert">Rent Missing</em>
-                      )}
-                    </span>
-                  )}
+                  <span>
+                    {listingData.roomConfigs && listingData.roomConfigs.length > 0 ? (
+                      listingData.roomConfigs.map(rc => `${rc.shareType}: ₹${rc.rent}`).join(', ')
+                    ) : (
+                      <em className="missing-alert">Missing (Add via chat)</em>
+                    )}
+                  </span>
                 </div>
                 <div className="field-edit-cell">
-                  {editingField === 'rent' ? (
-                    <button className="done-btn" onClick={saveEdit}><Check size={14} /></button>
-                  ) : (
-                    <button className="edit-btn" onClick={() => startEditing('rent')}><Edit3 size={14} /></button>
-                  )}
+                  {/* Read only from UI, users must edit via chat */}
                 </div>
               </div>
 

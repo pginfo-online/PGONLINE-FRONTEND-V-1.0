@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle, Clock } from 'lucide-react';
+import { Save, ArrowLeft, Globe, MapPin, Phone, HelpCircle, Clock, Sparkles, Building, Briefcase, Trash2, Plus, X } from 'lucide-react';
+import { StandaloneSearchBox, useJsApiLoader } from '@react-google-maps/api';
 import PageWrapper from '../../components/layout/PageWrapper';
 import ImageUploader from '../../components/shared/ImageUploader';
 import pgService from '../../services/pg.service';
@@ -17,6 +18,10 @@ const FACILITIES = [
 const initialForm = {
   name: '',
   description: '',
+  propertyType: 'PG',
+  propertyAge: '',
+  totalRooms: '',
+  floors: '',
   city: 'Pune',
   area: '',
   address: '',
@@ -28,9 +33,12 @@ const initialForm = {
   contactPhone: '',
   contactWhatsapp: '',
   isAvailable: true,
-  availableRooms: 0,
+  securityDeposit: '',
+  noticePeriod: '',
+  minStay: '',
   facilities: [],
-  rent: { single: '', double: '', triple: '' },
+  roomConfigs: [{ shareType: 'single', rent: '', totalBeds: '', availableBeds: '' }],
+  nearbyPlaces: [],
   photos: [],
 };
 
@@ -44,6 +52,14 @@ export default function EditPG() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [pendingRequest, setPendingRequest] = useState(null);
+
+  const searchBoxRef = useRef(null);
+  
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries: ['places'],
+  });
 
   const handleCancelRequest = async () => {
     if (!pendingRequest) return;
@@ -73,6 +89,10 @@ export default function EditPG() {
       setForm({
         name: pg.name || '',
         description: pg.description || '',
+        propertyType: pg.propertyType || 'PG',
+        propertyAge: pg.propertyAge != null ? String(pg.propertyAge) : '',
+        totalRooms: pg.totalRooms != null ? String(pg.totalRooms) : '',
+        floors: pg.floors != null ? String(pg.floors) : '',
         city: pg.city || 'Pune',
         area: pg.area || '',
         address: pg.address || '',
@@ -84,13 +104,12 @@ export default function EditPG() {
         contactPhone: pg.contactPhone || '',
         contactWhatsapp: pg.contactWhatsapp || '',
         isAvailable: pg.isAvailable ?? true,
-        availableRooms: pg.availableRooms != null ? String(pg.availableRooms) : '',
+        securityDeposit: pg.securityDeposit != null ? String(pg.securityDeposit) : '',
+        noticePeriod: pg.noticePeriod != null ? String(pg.noticePeriod) : '',
+        minStay: pg.minStay != null ? String(pg.minStay) : '',
         facilities: pg.facilities || [],
-        rent: {
-          single: pg.rent && pg.rent.single != null ? String(pg.rent.single) : '',
-          double: pg.rent && pg.rent.double != null ? String(pg.rent.double) : '',
-          triple: pg.rent && pg.rent.triple != null ? String(pg.rent.triple) : '',
-        },
+        roomConfigs: pg.roomConfigs?.length ? pg.roomConfigs.map(rc => ({ ...rc, rent: String(rc.rent) })) : [{ shareType: 'single', rent: '', totalBeds: '', availableBeds: '' }],
+        nearbyPlaces: pg.nearbyPlaces || [],
         photos: pg.photos || [],
       });
     } catch (err) {
@@ -101,14 +120,33 @@ export default function EditPG() {
     }
   };
 
-
   useEffect(() => {
     loadData();
   }, [id, navigate]);
 
-
   const update = (key, val) => setForm((p) => ({ ...p, [key]: val }));
-  const updateRent = (key, val) => setForm((p) => ({ ...p, rent: { ...p.rent, [key]: val } }));
+
+  const handlePlacesChanged = () => {
+    if (!searchBoxRef.current) return;
+    const places = searchBoxRef.current.getPlaces();
+    if (!places || places.length === 0) return;
+    const place = places[0];
+    
+    let city = form.city;
+    let area = form.area;
+    place.address_components?.forEach(comp => {
+      if (comp.types.includes('locality')) city = comp.long_name;
+      if (comp.types.includes('sublocality_level_1')) area = comp.long_name;
+    });
+
+    setForm(p => ({
+      ...p,
+      address: place.formatted_address || p.address,
+      mapsLink: place.url || p.mapsLink,
+      city: city,
+      area: area || p.area
+    }));
+  };
 
   const toggleFacility = (f) => {
     setForm((p) => ({
@@ -117,41 +155,39 @@ export default function EditPG() {
     }));
   };
 
+  // Dynamic arrays handlers
+  const addRoomConfig = () => setForm(p => ({ ...p, roomConfigs: [...p.roomConfigs, { shareType: 'single', rent: '', totalBeds: '', availableBeds: '' }] }));
+  const updateRoomConfig = (idx, field, val) => {
+    const newConfigs = [...form.roomConfigs];
+    newConfigs[idx][field] = val;
+    update('roomConfigs', newConfigs);
+  };
+  const removeRoomConfig = (idx) => update('roomConfigs', form.roomConfigs.filter((_, i) => i !== idx));
+
+  const addNearbyPlace = () => setForm(p => ({ ...p, nearbyPlaces: [...p.nearbyPlaces, { placeType: 'college', name: '', distance: '' }] }));
+  const updateNearbyPlace = (idx, field, val) => {
+    const newPlaces = [...form.nearbyPlaces];
+    newPlaces[idx][field] = val;
+    update('nearbyPlaces', newPlaces);
+  };
+  const removeNearbyPlace = (idx) => update('nearbyPlaces', form.nearbyPlaces.filter((_, i) => i !== idx));
+
   const validateForm = () => {
     const newErrors = {};
-    if (!form.name || form.name.trim().length < 3) {
-      newErrors.name = 'PG name must be at least 3 characters';
-    }
-    if (!form.area || form.area.trim().length < 2) {
-      newErrors.area = 'Area/locality is required';
-    }
-    if (!form.address || form.address.trim().length < 5) {
-      newErrors.address = 'Full address is required (min 5 characters)';
-    }
+    if (!form.name || form.name.trim().length < 3) newErrors.name = 'PG name must be at least 3 characters';
+    if (!form.area || form.area.trim().length < 2) newErrors.area = 'Area/locality is required';
+    if (!form.address || form.address.trim().length < 5) newErrors.address = 'Full address is required';
 
     const phoneRegex = /^[6-9]\d{9}$/;
-    if (!form.contactPhone) {
-      newErrors.contactPhone = 'Contact phone is required';
-    } else if (!phoneRegex.test(form.contactPhone)) {
-      newErrors.contactPhone = 'Enter a valid 10-digit mobile number';
-    }
+    if (!form.contactPhone || !phoneRegex.test(form.contactPhone)) newErrors.contactPhone = 'Valid 10-digit mobile number required';
+    if (form.contactWhatsapp && !phoneRegex.test(form.contactWhatsapp)) newErrors.contactWhatsapp = 'Valid 10-digit mobile number required';
 
-    if (form.contactWhatsapp && !phoneRegex.test(form.contactWhatsapp)) {
-      newErrors.contactWhatsapp = 'Enter a valid 10-digit mobile number';
-    }
-
-    if (form.rent.single && Number(form.rent.single) < 0) {
-      newErrors.singleRent = 'Rent cannot be negative';
-    }
-    if (form.rent.double && Number(form.rent.double) < 0) {
-      newErrors.doubleRent = 'Rent cannot be negative';
-    }
-    if (form.rent.triple && Number(form.rent.triple) < 0) {
-      newErrors.tripleRent = 'Rent cannot be negative';
-    }
-
-    if (form.availableRooms !== undefined && form.availableRooms !== '' && Number(form.availableRooms) < 0) {
-      newErrors.availableRooms = 'Rooms count cannot be negative';
+    if (form.roomConfigs.length === 0) {
+      newErrors.roomConfigs = 'Add at least one room configuration';
+    } else {
+      form.roomConfigs.forEach((rc, i) => {
+        if (!rc.rent || Number(rc.rent) <= 0) newErrors[`roomRent_${i}`] = 'Valid rent is required';
+      });
     }
 
     setErrors(newErrors);
@@ -170,20 +206,25 @@ export default function EditPG() {
     setSaving(true);
 
     try {
-      const cleanNumberOrNull = (val) => {
-        if (val === null || val === undefined) return null;
-        const str = String(val).trim();
-        return str === '' ? null : Number(str);
-      };
-
+      const cleanNumberOrNull = (val) => (val === '' || val === null || val === undefined) ? null : Number(val);
+      
       const data = {
         ...form,
-        rent: {
-          single: cleanNumberOrNull(form.rent.single),
-          double: cleanNumberOrNull(form.rent.double),
-          triple: cleanNumberOrNull(form.rent.triple),
-        },
-        availableRooms: cleanNumberOrNull(form.availableRooms),
+        propertyAge: cleanNumberOrNull(form.propertyAge),
+        totalRooms: cleanNumberOrNull(form.totalRooms),
+        floors: cleanNumberOrNull(form.floors),
+        securityDeposit: cleanNumberOrNull(form.securityDeposit),
+        noticePeriod: cleanNumberOrNull(form.noticePeriod),
+        minStay: cleanNumberOrNull(form.minStay),
+        roomConfigs: form.roomConfigs.map(rc => ({
+          shareType: rc.shareType,
+          rent: cleanNumberOrNull(rc.rent),
+          totalBeds: cleanNumberOrNull(rc.totalBeds),
+          availableBeds: cleanNumberOrNull(rc.availableBeds)
+        })).filter(rc => rc.rent !== null),
+        nearbyPlaces: form.nearbyPlaces.map(np => ({
+          ...np, distance: cleanNumberOrNull(np.distance)
+        })).filter(np => np.name.trim() !== '')
       };
 
       await pgService.update(id, data);
@@ -226,81 +267,65 @@ export default function EditPG() {
 
   return (
     <PageWrapper title={`Edit: ${form.name}`} subtitle="Update details and photos of your PG" action={backAction}>
-      <form onSubmit={handleSubmit}>
-
+      <form onSubmit={handleSubmit} className="space-y-6 pb-12">
+        {/* Pending request banner stays here... */}
         {pendingRequest && (
-          <div style={{
-            background: '#fffbeb',
-            border: '1px solid #fef3c7',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.25rem' }}>⏳</span>
-                <span style={{ fontWeight: 600, color: '#92400e' }}>
-                  You have a pending update request for this listing.
-                </span>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⏳</span>
+                <span className="font-semibold text-amber-900">You have a pending update request for this listing.</span>
               </div>
-              <span className={`badge badge-${pendingRequest.status}`} style={{ margin: 0 }}>
-                {pendingRequest.status.replace('_', ' ')}
-              </span>
+              <span className={`badge badge-${pendingRequest.status} m-0`}>{pendingRequest.status.replace('_', ' ')}</span>
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#b45309' }}>
-              Submitted on {new Date(pendingRequest.submittedAt).toLocaleString()}
-            </div>
+            <div className="text-sm text-amber-700">Submitted on {new Date(pendingRequest.submittedAt).toLocaleString()}</div>
             {pendingRequest.adminComment && (
-              <div style={{
-                background: '#fff',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                borderLeft: '4px solid #f59e0b',
-                marginTop: '4px',
-                fontSize: '0.875rem',
-                color: '#374151'
-              }}>
+              <div className="bg-white p-3 rounded-lg border-l-4 border-amber-500 mt-1 text-sm text-slate-700">
                 <strong>Admin Comment:</strong> {pendingRequest.adminComment}
               </div>
             )}
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={handleCancelRequest}
-              style={{
-                alignSelf: 'flex-start',
-                marginTop: '8px',
-                background: '#fef2f2',
-                color: '#dc2626',
-                border: '1px solid #fca5a5'
-              }}
-            >
+            <button type="button" className="btn btn-secondary btn-sm self-start mt-2 bg-red-50 text-red-600 border border-red-200" onClick={handleCancelRequest}>
               Cancel Update Request
             </button>
           </div>
         )}
 
-
         {/* Basic Info */}
-        <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1.25rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <MapPin size={18} color="#4f46e5" /> Basic Info
+        <div className="card">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">
+            <MapPin size={20} className="text-brand-primary" /> Location & Identification
           </h3>
-          <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.875rem', color: '#1e40af', border: '1px solid #bfdbfe' }}>
-            <strong>Note:</strong> Please ensure your City, Area, and Address are accurate. We use this to update your PG's map location for nearby searches.
+          <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800 mb-6 font-medium flex gap-3 items-start">
+            <Sparkles size={18} className="text-blue-500 shrink-0 mt-0.5" />
+            <p>Start typing in the address field to automatically fetch correct location details using Google Maps.</p>
           </div>
-          <div className="grid-2">
-            <Input
-              label="PG Name *"
-              value={form.name}
-              onChange={(e) => update('name', e.target.value)}
-              error={errors.name}
-              placeholder="e.g. Sunrise Premium PG"
-            />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+            <Input label="PG Name *" value={form.name} onChange={(e) => update('name', e.target.value)} error={errors.name} placeholder="e.g. Sunrise Premium PG" />
+            <div className="form-group">
+              <label className="label">Property Type</label>
+              <select className="input" value={form.propertyType} onChange={(e) => update('propertyType', e.target.value)}>
+                <option value="PG">PG</option>
+                <option value="Hostel">Hostel</option>
+                <option value="Co-living">Co-living</option>
+                <option value="Apartment">Apartment</option>
+                <option value="Independent House">Independent House</option>
+              </select>
+            </div>
+          </div>
 
+          <div className="mb-5">
+            {isLoaded ? (
+              <StandaloneSearchBox onLoad={ref => searchBoxRef.current = ref} onPlacesChanged={handlePlacesChanged}>
+                <Input label="Search Full Address (Google Maps) *" value={form.address} onChange={(e) => update('address', e.target.value)} error={errors.address} placeholder="Start typing address..." />
+              </StandaloneSearchBox>
+            ) : (
+              <Input label="Address *" value={form.address} onChange={(e) => update('address', e.target.value)} error={errors.address} placeholder="Loading maps..." disabled />
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <Input label="Area/Locality *" value={form.area} onChange={(e) => update('area', e.target.value)} error={errors.area} placeholder="e.g. Hinjewadi Phase 1" />
             <div className="form-group">
               <label className="label">City *</label>
               <select className="input" value={form.city} onChange={(e) => update('city', e.target.value)}>
@@ -310,21 +335,23 @@ export default function EditPG() {
                 <option value="Bangalore">Bangalore</option>
                 <option value="Chennai">Chennai</option>
                 <option value="Hyderabad">Hyderabad</option>
-                <option value="Kolkata">Kolkata</option>
-                <option value="Jaipur">Jaipur</option>
-                <option value="Ahmedabad">Ahmedabad</option>
-                <option value="Other">Other</option>
               </select>
             </div>
+            <Input label="Google Maps Link" value={form.mapsLink} onChange={(e) => update('mapsLink', e.target.value)} placeholder="https://maps.google.com/..." />
+          </div>
 
-            <Input
-              label="Area / Locality *"
-              value={form.area}
-              onChange={(e) => update('area', e.target.value)}
-              error={errors.area}
-              placeholder="e.g. Hinjewadi Phase 1"
-            />
+          <div className="form-group mt-5">
+            <label className="label">Description</label>
+            <textarea className="input" rows={3} value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="Describe amenities, surroundings, rules..." />
+          </div>
+        </div>
 
+        {/* Property Specs */}
+        <div className="card">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">
+            <Building size={20} className="text-brand-primary" /> Property Details
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
             <div className="form-group">
               <label className="label">Gender Allowed</label>
               <select className="input" value={form.gender} onChange={(e) => update('gender', e.target.value)}>
@@ -333,71 +360,59 @@ export default function EditPG() {
                 <option value="female">Female Only</option>
               </select>
             </div>
-          </div>
-
-          <Input
-            label="Address *"
-            value={form.address}
-            onChange={(e) => update('address', e.target.value)}
-            error={errors.address}
-            placeholder="Full physical address"
-          />
-
-          <Input
-            label="Google Maps Link"
-            value={form.mapsLink}
-            onChange={(e) => update('mapsLink', e.target.value)}
-            error={errors.mapsLink}
-            placeholder="https://maps.google.com/..."
-            icon={<Globe size={16} />}
-          />
-
-          <div className="form-group">
-            <label className="label">Description</label>
-            <textarea
-              className="input"
-              rows={3}
-              value={form.description}
-              onChange={(e) => update('description', e.target.value)}
-              placeholder="Describe amenities, surroundings, rules, and benefits..."
-              style={{ resize: 'vertical' }}
-            />
+            <Input label="Total Rooms" type="number" value={form.totalRooms} onChange={(e) => update('totalRooms', e.target.value)} placeholder="e.g. 10" />
+            <Input label="Floors" type="number" value={form.floors} onChange={(e) => update('floors', e.target.value)} placeholder="e.g. 3" />
+            <Input label="Property Age (Years)" type="number" value={form.propertyAge} onChange={(e) => update('propertyAge', e.target.value)} placeholder="e.g. 5" />
           </div>
         </div>
 
-        {/* Rent & Amenities */}
-        <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1.25rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <HelpCircle size={18} color="#4f46e5" /> Rent & Amenities
+        {/* Room Configs */}
+        <div className="card bg-slate-50 border-slate-200">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-200 pb-3">
+            <Briefcase size={20} className="text-brand-primary" /> Room Configurations & Rent
           </h3>
-          <div className="grid-3">
-            <Input
-              label="Single Room (₹/mo)"
-              type="number"
-              value={form.rent.single}
-              onChange={(e) => updateRent('single', e.target.value)}
-              error={errors.singleRent}
-              placeholder="e.g. 9500"
-            />
-            <Input
-              label="Double Sharing (₹/mo)"
-              type="number"
-              value={form.rent.double}
-              onChange={(e) => updateRent('double', e.target.value)}
-              error={errors.doubleRent}
-              placeholder="e.g. 7000"
-            />
-            <Input
-              label="Triple Sharing (₹/mo)"
-              type="number"
-              value={form.rent.triple}
-              onChange={(e) => updateRent('triple', e.target.value)}
-              error={errors.tripleRent}
-              placeholder="e.g. 5000"
-            />
-          </div>
+          
+          {errors.roomConfigs && <p className="text-red-500 text-sm font-semibold mb-4">{errors.roomConfigs}</p>}
 
-          <div className="grid-3" style={{ alignItems: 'center', marginTop: '0.5rem' }}>
+          <div className="space-y-4">
+            {form.roomConfigs.map((rc, idx) => (
+              <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+                {form.roomConfigs.length > 1 && (
+                  <button type="button" onClick={() => removeRoomConfig(idx)} className="absolute -top-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 p-1.5 rounded-full shadow-sm transition-colors">
+                    <X size={14} />
+                  </button>
+                )}
+                
+                <div className="form-group mb-0">
+                  <label className="label">Sharing Type</label>
+                  <select className="input bg-slate-50" value={rc.shareType} onChange={(e) => updateRoomConfig(idx, 'shareType', e.target.value)}>
+                    <option value="single">Single</option>
+                    <option value="double">Double</option>
+                    <option value="triple">Triple</option>
+                    <option value="four">Four</option>
+                  </select>
+                </div>
+                <Input label="Monthly Rent (₹) *" type="number" value={rc.rent} onChange={(e) => updateRoomConfig(idx, 'rent', e.target.value)} error={errors[`roomRent_${idx}`]} placeholder="e.g. 8000" />
+                <Input label="Total Beds" type="number" value={rc.totalBeds} onChange={(e) => updateRoomConfig(idx, 'totalBeds', e.target.value)} placeholder="e.g. 10" />
+                <Input label="Available Beds" type="number" value={rc.availableBeds} onChange={(e) => updateRoomConfig(idx, 'availableBeds', e.target.value)} placeholder="e.g. 4" />
+              </div>
+            ))}
+          </div>
+          
+          <button type="button" onClick={addRoomConfig} className="mt-4 flex items-center gap-2 text-brand-primary font-bold hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-blue-100 text-sm">
+            <Plus size={16} /> Add another room configuration
+          </button>
+        </div>
+
+        {/* Rules & Amenities */}
+        <div className="card">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">
+            <HelpCircle size={20} className="text-brand-primary" /> Rules & Amenities
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-5 mb-6">
+            <Input label="Security Deposit (₹)" type="number" value={form.securityDeposit} onChange={(e) => update('securityDeposit', e.target.value)} placeholder="e.g. 10000" />
+            <Input label="Notice Period (Days)" type="number" value={form.noticePeriod} onChange={(e) => update('noticePeriod', e.target.value)} placeholder="e.g. 30" />
+            <Input label="Min Stay (Months)" type="number" value={form.minStay} onChange={(e) => update('minStay', e.target.value)} placeholder="e.g. 6" />
             <div className="form-group">
               <label className="label">Food Option</label>
               <select className="input" value={form.food} onChange={(e) => update('food', e.target.value)}>
@@ -407,53 +422,26 @@ export default function EditPG() {
                 <option value="both">Veg & Non-Veg</option>
               </select>
             </div>
-
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', paddingTop: '1.25rem' }}>
-              <input
-                type="checkbox"
-                checked={form.foodIncluded}
-                onChange={(e) => update('foodIncluded', e.target.checked)}
-                id="edit-food-inc"
-                style={{ width: 17, height: 17, cursor: 'pointer', accentColor: '#4f46e5' }}
-              />
-              <label htmlFor="edit-food-inc" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151', cursor: 'pointer' }}>
-                Food included in rent
-              </label>
-            </div>
-
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', paddingTop: '1.25rem' }}>
-              <input
-                type="checkbox"
-                checked={form.ac}
-                onChange={(e) => update('ac', e.target.checked)}
-                id="edit-ac"
-                style={{ width: 17, height: 17, cursor: 'pointer', accentColor: '#4f46e5' }}
-              />
-              <label htmlFor="edit-ac" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151', cursor: 'pointer' }}>
-                AC Rooms available
-              </label>
-            </div>
           </div>
 
-          <div className="form-group" style={{ marginTop: '0.75rem' }}>
-            <label className="label" style={{ marginBottom: '0.625rem' }}>Facilities / Amenities</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div className="flex flex-wrap gap-6 mb-6 px-2">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" checked={form.foodIncluded} onChange={(e) => update('foodIncluded', e.target.checked)} className="w-5 h-5 text-brand-primary border-slate-300 rounded focus:ring-brand-primary" />
+              <span className="font-semibold text-slate-700">Food included in rent</span>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" checked={form.ac} onChange={(e) => update('ac', e.target.checked)} className="w-5 h-5 text-brand-primary border-slate-300 rounded focus:ring-brand-primary" />
+              <span className="font-semibold text-slate-700">AC Rooms available</span>
+            </label>
+          </div>
+
+          <div className="form-group">
+            <label className="label mb-3">Facilities Provided</label>
+            <div className="flex flex-wrap gap-2.5">
               {FACILITIES.map((f) => {
-                const selected = form.facilities.includes(f);
+                const isSelected = form.facilities.includes(f);
                 return (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => toggleFacility(f)}
-                    className="btn btn-sm"
-                    style={{
-                      border: '1px solid',
-                      borderColor: selected ? '#4f46e5' : '#d1d5db',
-                      background: selected ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : '#fff',
-                      color: selected ? '#fff' : '#4b5563',
-                      boxShadow: selected ? '0 2px 6px rgba(79, 70, 229, 0.2)' : 'none',
-                    }}
-                  >
+                  <button key={f} type="button" onClick={() => toggleFacility(f)} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${isSelected ? 'bg-brand-primary text-white border-brand-primary shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
                     {f}
                   </button>
                 );
@@ -461,56 +449,65 @@ export default function EditPG() {
             </div>
           </div>
         </div>
-
-        {/* Contact, Availability & Capacity */}
-        <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1.25rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Phone size={18} color="#4f46e5" /> Contact & Availability
+        
+        {/* Nearby Places */}
+        <div className="card">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">
+            <MapPin size={20} className="text-brand-primary" /> Nearby Places
           </h3>
-          <div className="grid-3">
-            <Input
-              label="Contact Phone *"
-              value={form.contactPhone}
-              onChange={(e) => update('contactPhone', e.target.value)}
-              error={errors.contactPhone}
-              placeholder="e.g. 9876543210"
-            />
-
-            <Input
-              label="WhatsApp Number"
-              value={form.contactWhatsapp}
-              onChange={(e) => update('contactWhatsapp', e.target.value)}
-              error={errors.contactWhatsapp}
-              placeholder="Same or different"
-            />
-
-            <Input
-              label="Available Rooms"
-              type="number"
-              value={form.availableRooms}
-              onChange={(e) => update('availableRooms', e.target.value)}
-              error={errors.availableRooms}
-              placeholder="e.g. 3"
-            />
+          
+          <div className="space-y-3">
+            {form.nearbyPlaces.map((np, idx) => (
+              <div key={idx} className="flex flex-col sm:flex-row gap-3 items-end p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="form-group mb-0 flex-1">
+                  <label className="label text-xs">Place Type</label>
+                  <select className="input bg-white" value={np.placeType} onChange={(e) => updateNearbyPlace(idx, 'placeType', e.target.value)}>
+                    <option value="college">College/University</option>
+                    <option value="it_park">IT Park/Tech Hub</option>
+                    <option value="metro">Metro Station</option>
+                    <option value="bus_stop">Bus Stop</option>
+                    <option value="hospital">Hospital</option>
+                    <option value="shopping_mall">Shopping Mall</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="flex-1 w-full">
+                  <Input label="Name" value={np.name} onChange={(e) => updateNearbyPlace(idx, 'name', e.target.value)} placeholder="e.g. Infosys Campus" />
+                </div>
+                <div className="w-full sm:w-32">
+                  <Input label="Distance (km)" type="number" step="0.1" value={np.distance} onChange={(e) => updateNearbyPlace(idx, 'distance', e.target.value)} placeholder="e.g. 1.5" />
+                </div>
+                <button type="button" onClick={() => removeNearbyPlace(idx)} className="p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl border border-slate-200 transition-colors mb-[1px]">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
           </div>
+          
+          <button type="button" onClick={addNearbyPlace} className="mt-4 flex items-center gap-2 text-brand-primary font-bold hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-blue-100 text-sm">
+            <Plus size={16} /> Add a nearby place
+          </button>
+        </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginTop: '0.5rem' }}>
-            <input
-              type="checkbox"
-              checked={form.isAvailable}
-              onChange={(e) => update('isAvailable', e.target.checked)}
-              id="edit-is-avail"
-              style={{ width: 17, height: 17, cursor: 'pointer', accentColor: '#4f46e5' }}
-            />
-            <label htmlFor="edit-is-avail" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937', cursor: 'pointer' }}>
-              Listing is Available for Booking (Show in Tenant App)
-            </label>
+        {/* Contact Details */}
+        <div className="card">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">
+            <Phone size={20} className="text-brand-primary" /> Contact Details & Availability
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Input label="Contact Phone *" value={form.contactPhone} onChange={(e) => update('contactPhone', e.target.value)} error={errors.contactPhone} placeholder="e.g. 9876543210" />
+            <Input label="WhatsApp Number" value={form.contactWhatsapp} onChange={(e) => update('contactWhatsapp', e.target.value)} error={errors.contactWhatsapp} placeholder="Optional, if different" />
+          </div>
+          <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+            <input type="checkbox" checked={form.isAvailable} onChange={(e) => update('isAvailable', e.target.checked)} id="edit-is-avail" className="w-5 h-5 text-brand-primary border-slate-300 rounded focus:ring-brand-primary cursor-pointer" />
+            <label htmlFor="edit-is-avail" className="font-semibold text-slate-700 cursor-pointer">Listing is Available for Booking (Show in Tenant App)</label>
           </div>
         </div>
 
         {/* Photos Card */}
-        <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Photos</h3>
+        <div className="card">
+          <h3 className="text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">Photos (Max 15)</h3>
           <ImageUploader
             pgId={id}
             currentPhotos={form.photos}

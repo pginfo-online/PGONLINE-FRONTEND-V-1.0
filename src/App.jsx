@@ -28,6 +28,12 @@ import MeetupManagement from './screens/admin/MeetupManagement';
 import Meetups from './screens/owner/Meetups';
 import CreateEditMeetup from './screens/owner/CreateEditMeetup';
 
+// Tenant 
+import ExplorePGs from './screens/tenant/ExplorePGs';
+import PGDetails from './screens/tenant/PGDetails';
+import Wishlist from './screens/tenant/Wishlist';
+import MyVisits from './screens/tenant/MyVisits';
+import TenantMeetups from './screens/tenant/Meetups';
 // Public Landing Screens
 import LandingPage from './screens/landing/LandingPage';
 import Careers from './screens/landing/Careers';
@@ -69,7 +75,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={
           isAuthenticated
-            ? <Navigate to={user?.role === 'admin' ? '/admin/dashboard' : '/owner/dashboard'} replace />
+            ? <Navigate to={user?.role === 'admin' ? '/admin/dashboard' : user?.role === 'owner' ? '/owner/dashboard' : '/explore'} replace />
             : <Login />
         } />
 
@@ -98,6 +104,13 @@ export default function App() {
         <Route path="/owner/meetups" element={<PrivateRoute allowedRoles={['owner']}><Meetups /></PrivateRoute>} />
         <Route path="/owner/meetups/create" element={<PrivateRoute allowedRoles={['owner']}><CreateEditMeetup /></PrivateRoute>} />
         <Route path="/owner/meetups/:id/edit" element={<PrivateRoute allowedRoles={['owner']}><CreateEditMeetup /></PrivateRoute>} />
+
+        {/* Tenant Routes */}
+        <Route path="/explore" element={<ExplorePGs />} />
+        <Route path="/pg/:id" element={<PGDetails />} />
+        <Route path="/wishlist" element={<PrivateRoute allowedRoles={['tenant']}><Wishlist /></PrivateRoute>} />
+        <Route path="/visits" element={<PrivateRoute allowedRoles={['tenant']}><MyVisits /></PrivateRoute>} />
+        <Route path="/meetups" element={<PrivateRoute allowedRoles={['tenant']}><TenantMeetups /></PrivateRoute>} />
 
 
         {/* Public Landing Pages */}
