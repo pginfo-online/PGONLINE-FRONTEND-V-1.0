@@ -54,7 +54,7 @@ export default function EditPG() {
   const [pendingRequest, setPendingRequest] = useState(null);
 
   const searchBoxRef = useRef(null);
-  
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
@@ -108,7 +108,28 @@ export default function EditPG() {
         noticePeriod: pg.noticePeriod != null ? String(pg.noticePeriod) : '',
         minStay: pg.minStay != null ? String(pg.minStay) : '',
         facilities: pg.facilities || [],
-        roomConfigs: pg.roomConfigs?.length ? pg.roomConfigs.map(rc => ({ ...rc, rent: String(rc.rent) })) : [{ shareType: 'single', rent: '', totalBeds: '', availableBeds: '' }],
+        roomConfigs: (() => {
+          let configs = pg.roomConfigs || [];
+          if (!configs.length && pg.rent) {
+            configs = Object.entries(pg.rent)
+              .filter(([_, val]) => val !== null && val !== undefined && val !== '')
+              .map(([shareType, val]) => ({
+                shareType,
+                rent: String(val),
+                totalBeds: '',
+                availableBeds: ''
+              }));
+          }
+          if (!configs.length) {
+            return [{ shareType: 'single', rent: '', totalBeds: '', availableBeds: '' }];
+          }
+          return configs.map(rc => ({
+            ...rc,
+            rent: rc.rent != null ? String(rc.rent) : '',
+            totalBeds: rc.totalBeds != null ? String(rc.totalBeds) : '',
+            availableBeds: rc.availableBeds != null ? String(rc.availableBeds) : ''
+          }));
+        })(),
         nearbyPlaces: pg.nearbyPlaces || [],
         photos: pg.photos || [],
       });
@@ -131,7 +152,7 @@ export default function EditPG() {
     const places = searchBoxRef.current.getPlaces();
     if (!places || places.length === 0) return;
     const place = places[0];
-    
+
     let city = form.city;
     let area = form.area;
     place.address_components?.forEach(comp => {
@@ -207,7 +228,7 @@ export default function EditPG() {
 
     try {
       const cleanNumberOrNull = (val) => (val === '' || val === null || val === undefined) ? null : Number(val);
-      
+
       const data = {
         ...form,
         propertyAge: cleanNumberOrNull(form.propertyAge),
@@ -299,7 +320,7 @@ export default function EditPG() {
             <Sparkles size={18} className="text-blue-500 shrink-0 mt-0.5" />
             <p>Start typing in the address field to automatically fetch correct location details using Google Maps.</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
             <Input label="PG Name *" value={form.name} onChange={(e) => update('name', e.target.value)} error={errors.name} placeholder="e.g. Sunrise Premium PG" />
             <div className="form-group">
@@ -335,6 +356,50 @@ export default function EditPG() {
                 <option value="Bangalore">Bangalore</option>
                 <option value="Chennai">Chennai</option>
                 <option value="Hyderabad">Hyderabad</option>
+                <option value="Kolkata">Kolkata</option>
+                <option value="Ahmedabad">Ahmedabad</option>
+                <option value="Jaipur">Jaipur</option>
+                <option value="Surat">Surat</option>
+                <option value="Noida">Noida</option>
+                <option value="Gurgaon">Gurgaon</option>
+                <option value="Ghaziabad">Ghaziabad</option>
+                <option value="Faridabad">Faridabad</option>
+                <option value="Lucknow">Lucknow</option>
+                <option value="Kanpur">Kanpur</option>
+                <option value="Nagpur">Nagpur</option>
+                <option value="Indore">Indore</option>
+                <option value="Bhopal">Bhopal</option>
+                <option value="Nashik">Nashik</option>
+                <option value="Vadodara">Vadodara</option>
+                <option value="Rajkot">Rajkot</option>
+                <option value="Chandigarh">Chandigarh</option>
+                <option value="Mohali">Mohali</option>
+                <option value="Amritsar">Amritsar</option>
+                <option value="Ludhiana">Ludhiana</option>
+                <option value="Dehradun">Dehradun</option>
+                <option value="Haridwar">Haridwar</option>
+                <option value="Rishikesh">Rishikesh</option>
+                <option value="Kochi">Kochi</option>
+                <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                <option value="Coimbatore">Coimbatore</option>
+                <option value="Madurai">Madurai</option>
+                <option value="Visakhapatnam">Visakhapatnam</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Bhubaneswar">Bhubaneswar</option>
+                <option value="Patna">Patna</option>
+                <option value="Ranchi">Ranchi</option>
+                <option value="Guwahati">Guwahati</option>
+                <option value="Mysore">Mysore</option>
+                <option value="Mangalore">Mangalore</option>
+                <option value="Agra">Agra</option>
+                <option value="Varanasi">Varanasi</option>
+                <option value="Prayagraj">Prayagraj</option>
+                <option value="Meerut">Meerut</option>
+                <option value="Jodhpur">Jodhpur</option>
+                <option value="Udaipur">Udaipur</option>
+                <option value="Aurangabad">Aurangabad</option>
+                <option value="Thane">Thane</option>
+                <option value="Navi Mumbai">Navi Mumbai</option>
               </select>
             </div>
             <Input label="Google Maps Link" value={form.mapsLink} onChange={(e) => update('mapsLink', e.target.value)} placeholder="https://maps.google.com/..." />
@@ -371,7 +436,7 @@ export default function EditPG() {
           <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-200 pb-3">
             <Briefcase size={20} className="text-brand-primary" /> Room Configurations & Rent
           </h3>
-          
+
           {errors.roomConfigs && <p className="text-red-500 text-sm font-semibold mb-4">{errors.roomConfigs}</p>}
 
           <div className="space-y-4">
@@ -382,7 +447,7 @@ export default function EditPG() {
                     <X size={14} />
                   </button>
                 )}
-                
+
                 <div className="form-group mb-0">
                   <label className="label">Sharing Type</label>
                   <select className="input bg-slate-50" value={rc.shareType} onChange={(e) => updateRoomConfig(idx, 'shareType', e.target.value)}>
@@ -398,7 +463,7 @@ export default function EditPG() {
               </div>
             ))}
           </div>
-          
+
           <button type="button" onClick={addRoomConfig} className="mt-4 flex items-center gap-2 text-brand-primary font-bold hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-blue-100 text-sm">
             <Plus size={16} /> Add another room configuration
           </button>
@@ -449,13 +514,13 @@ export default function EditPG() {
             </div>
           </div>
         </div>
-        
+
         {/* Nearby Places */}
         <div className="card">
           <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3">
             <MapPin size={20} className="text-brand-primary" /> Nearby Places
           </h3>
-          
+
           <div className="space-y-3">
             {form.nearbyPlaces.map((np, idx) => (
               <div key={idx} className="flex flex-col sm:flex-row gap-3 items-end p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -484,7 +549,7 @@ export default function EditPG() {
               </div>
             ))}
           </div>
-          
+
           <button type="button" onClick={addNearbyPlace} className="mt-4 flex items-center gap-2 text-brand-primary font-bold hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-blue-100 text-sm">
             <Plus size={16} /> Add a nearby place
           </button>
